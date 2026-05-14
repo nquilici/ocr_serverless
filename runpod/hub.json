@@ -1,0 +1,22 @@
+{
+  "name": "OCR Serverless — vLLM + Qwen3-VL",
+  "description": "High-throughput OCR for legal documents using vLLM and Qwen3-VL-8B. OpenAI-compatible API.",
+  "category": "LLM Inference",
+  "tags": ["ocr", "vllm", "qwen", "vision", "legal", "documents"],
+  "hardware": {
+    "gpu": {
+      "min_vram_gb": 24,
+      "recommended": "A40"
+    }
+  },
+  "environment": {
+    "docker_image": "nquilici/ocr-serverless",
+    "ports": ["8000/http"],
+    "env": {
+      "MODEL_ID": {
+        "description": "HuggingFace model ID",
+        "default": "Qwen/Qwen3-VL-8B-Instruct"
+      }
+    }
+  }
+}
