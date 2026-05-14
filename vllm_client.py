@@ -93,8 +93,13 @@ def classify_page(page):
 # ═══════════════════════════════════════════
 
 class VLLMClient:
-    def __init__(self, server_url: str, max_tokens: int = 512, timeout: int = 120):
+    def __init__(self, server_url: str, max_tokens: int = 512, timeout: int = 120, api_key: str = None):
+        # Runpod serverless: https://api.runpod.ai/v2/ENDPOINT/openai
+        # Pod dedicado:       http://IP:8000
+        if "/v2/" in server_url and "/openai" not in server_url:
+            server_url = server_url.rstrip("/") + "/openai"
         self.api_url = server_url.rstrip("/") + "/v1/chat/completions"
+        self.api_key = api_key
         self.max_tokens = max_tokens
         self.timeout = timeout
 
@@ -112,6 +117,10 @@ class VLLMClient:
 
         t0 = time.time()
         try:
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+
             resp = requests.post(self.api_url, json={
                 "model": "default",
                 "messages": [{
@@ -152,6 +161,8 @@ def main():
     parser.add_argument("--output", default="output_vllm")
     parser.add_argument("--workers", type=int, default=16, help="Requisições paralelas")
     parser.add_argument("--max-tokens", type=int, default=512)
+    parser.add_argument("--api-key", default=os.environ.get("RUNPOD_API_KEY", ""),
+                       help="Runpod API key (ou defina RUNPOD_API_KEY no ambiente)")
     args = parser.parse_args()
 
     output_dir = Path(args.output)
@@ -169,7 +180,7 @@ def main():
     log(f"{'='*60}\n")
 
     # Verificar servidor
-    client = VLLMClient(args.server, args.max_tokens)
+    client = VLLMClient(args.server, args.max_tokens, api_key=args.api_key)
     if not client.check_health():
         log(f"❌ Servidor inacessível: {args.server}")
         sys.exit(1)
